@@ -1,4 +1,7 @@
-﻿namespace MaleFashion.Server.Models.DTOs.ProductVariant
+﻿using MaleFashion.Server.Models.DTOs.Color;
+using MaleFashion.Server.Models.DTOs.Size;
+
+namespace MaleFashion.Server.Models.DTOs.ProductVariant
 {
     public class ProductVariantDto
     {
@@ -7,8 +10,8 @@
 
         public int ProductId { get; set; }
 
-        public int ColorId { get; set; }
+        public ColorDto? ColorDto { get; set; }
 
-        public int SizeId { get; set; }
+        public SizeDto? SizeDto { get; set; }
     }
 }

@@ -90,6 +90,26 @@ builder.Services.AddAuthentication(options =>
 });
 #endregion
 
+#region CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder =>
+        {
+            builder.AllowAnyOrigin()
+                   .AllowAnyMethod()
+                   .AllowAnyHeader();
+        });
+});
+#endregion
+
+#region Route
+builder.Services.AddRouting(options =>
+{
+    options.LowercaseUrls = true;
+});
+#endregion
+
 #region Repository and Service Registrations
 // Repositories
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
@@ -116,7 +136,27 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<SlugUtil>();
 #endregion
 
+#region Register Seed Service
+builder.Services.AddTransient<Seed>();
+#endregion
+
 var app = builder.Build();
+
+#region Database Seeding
+if (args.Length == 1 && args[0].ToLower() == "seeddata")
+    await SeedData(app);
+
+async Task SeedData(IHost app)
+{
+    var scopedFactory = app.Services.GetService<IServiceScopeFactory>();
+
+    using (var scope = scopedFactory.CreateScope())
+    {
+        var service = scope.ServiceProvider.GetService<Seed>();
+        await service.SeedApplicationDbContextAsync();
+    }
+}
+#endregion
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -128,6 +168,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAllOrigins");
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

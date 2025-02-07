@@ -4,7 +4,8 @@ namespace MaleFashion.Server.Services.Interfaces
 {
     public interface IAccountService
     {
-        Task<NewUserDto?> RegisterUserAsync(RegisterDto registerDto);
-        Task<NewUserDto?> LoginUserAsync(LoginDto loginDto);
+        Task<AuthResponseDto?> RegisterUserAsync(RegisterDto registerDto);
+        Task<AuthResponseDto?> LoginUserAsync(LoginDto loginDto, HttpResponse response);
+        Task LogoutAsync(HttpRequest request, HttpResponse response);
     }
 }

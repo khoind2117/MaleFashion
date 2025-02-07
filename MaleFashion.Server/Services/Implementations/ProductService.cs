@@ -1,5 +1,9 @@
 ﻿using MaleFashion.Server.Models.DTOs;
+using MaleFashion.Server.Models.DTOs.Color;
 using MaleFashion.Server.Models.DTOs.Product;
+using MaleFashion.Server.Models.DTOs.ProductVariant;
+using MaleFashion.Server.Models.DTOs.Size;
+using MaleFashion.Server.Models.DTOs.SubCategory;
 using MaleFashion.Server.Models.Entities;
 using MaleFashion.Server.Repositories.Implementations;
 using MaleFashion.Server.Repositories.Interfaces;
@@ -40,27 +44,47 @@ namespace MaleFashion.Server.Services.Implementations
             return productDto;
         }
 
-        public async Task<ProductDto> GetByIdAsync(int id)
+        public async Task<ProductDetailDto> GetByIdAsync(int id)
         {
-            var product = await _productRepository.GetByIdAsync(id);
+            var product = await _productRepository.GetProductById(id);
             if (product == null)
             {
                 throw new KeyNotFoundException();
             }
 
-            var productDto = new ProductDto
+            var productDetailDto = new ProductDetailDto
             {
                 Id = product.Id,
                 Name = product.Name,
                 Slug = product.Slug,
                 Description = product.Description,
                 Price = product.Price,
-                CreatedAt = product.CreatedAt,
-                UpdatedAt = product.UpdatedAt,
-                IsDeleted = product.IsDeleted
+                SubCategoryDto = product.SubCategory != null ? new SubCategoryDto
+                {
+                    Id = product.SubCategory.Id,
+                    Name = product.SubCategory.Name,
+                    Slug = product.SubCategory.Slug,
+                } : null,
+                ProductVariantDtos = product.ProductVariants?.Select(pv => new ProductVariantDto
+                {
+                    Id = pv.Id,
+                    Stock = pv.Stock,
+                    ProductId = pv.ProductId,
+                    ColorDto = pv.Color != null ? new ColorDto
+                    {
+                        Id = pv.Color.Id,
+                        Name = pv.Color.Name,
+                        ColorCode = pv.Color.ColorCode,
+                    } : null,
+                    SizeDto = pv.Size != null ? new SizeDto
+                    {
+                        Id = pv.Size.Id,
+                        Name = pv.Size.Name,
+                    } : null
+                }).ToList()
             };
 
-            return productDto;
+            return productDetailDto;
         }
 
         public async Task AddAsync(ProductRequestDto productRequestDto)
@@ -122,39 +146,11 @@ namespace MaleFashion.Server.Services.Implementations
             await _productRepository.DeleteAsync(product);
         }
 
-        public async Task<PagedDto<ProductDto>> GetPagedAsync(ProductFilterDto productFilterDto)
+        public async Task<PagedDto<PagedProductDto>> GetPagedAsync(ProductFilterDto productFilterDto)
         {
-            var query = await _productRepository.GetAllAsync();
-
-            if (!string.IsNullOrEmpty(productFilterDto.Keyword))
-            {
-                query = query.Where(p => p.Name.Contains(productFilterDto.Keyword));
-            }
-
-            if (!string.IsNullOrEmpty(productFilterDto.OrderBy))
-            {
-                switch (productFilterDto.OrderBy.ToLower())
-                {
-                    case "name":
-                        query = productFilterDto.IsDescending ? query.OrderByDescending(p => p.Name) : query.OrderBy(p => p.Name);
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            var totalRecords = query.Count();
-            var pagedItems = query.Skip(productFilterDto.GetSkip())
-                                    .Take(productFilterDto.GetTake());
-
-            IEnumerable<ProductDto> productDtos = pagedItems.Select(p => new ProductDto
-            {
-                Id = p.Id,
-                Name = p.Name,
-                Slug = p.Slug
-            }).ToList();
-
-            return new PagedDto<ProductDto>(totalRecords, productDtos.ToList());
+            var pagedProducts = await _productRepository.GetPagedProductsAsync(productFilterDto);
+            
+            return pagedProducts;
         }
 
 

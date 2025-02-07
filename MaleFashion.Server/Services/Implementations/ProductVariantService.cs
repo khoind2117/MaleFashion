@@ -34,8 +34,6 @@ namespace MaleFashion.Server.Services.Implementations
                 Id = v.Id,
                 Stock = v.Stock,
                 ProductId = v.ProductId,
-                ColorId = v.ColorId,
-                SizeId = v.SizeId,
             });
         }
 
@@ -53,8 +51,6 @@ namespace MaleFashion.Server.Services.Implementations
                 Id = variant.Id,
                 Stock = variant.Stock,
                 ProductId = variant.ProductId,
-                ColorId = variant.ColorId,
-                SizeId = variant.SizeId,
             };
         }
 

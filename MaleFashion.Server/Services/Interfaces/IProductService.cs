@@ -6,12 +6,12 @@ namespace MaleFashion.Server.Services.Interfaces
     public interface IProductService
     {
         Task<IEnumerable<ProductDto>> GetAllAsync();
-        Task<ProductDto> GetByIdAsync(int id);
+        Task<ProductDetailDto> GetByIdAsync(int id);
         Task AddAsync(ProductRequestDto productRequestDto);
         Task UpdateAsync(int id, ProductRequestDto productRequestDto);
         Task SoftDeleteAsync(int id);
         Task HardDeleteAsync(int id);
-        Task<PagedDto<ProductDto>> GetPagedAsync(ProductFilterDto productFilterDto);
+        Task<PagedDto<PagedProductDto>> GetPagedAsync(ProductFilterDto productFilterDto);
         Task<bool> ExistsAsync(int id);
     }
 }

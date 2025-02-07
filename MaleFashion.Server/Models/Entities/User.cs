@@ -8,6 +8,9 @@ namespace MaleFashion.Server.Models.Entities
         public required string LastName { get; set; }
         public required string Address { get; set; }
 
+        public string? RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
+
         public virtual Cart? Cart { get; set; }
 
         public virtual ICollection<Order>? Orders { get; set; }
