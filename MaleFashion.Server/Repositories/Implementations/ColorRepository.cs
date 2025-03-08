@@ -4,7 +4,7 @@ using MaleFashion.Server.Repositories.Interfaces;
 
 namespace MaleFashion.Server.Repositories.Implementations
 {
-    public class ColorRepository : Repository<ApplicationDbContext, Color>, IColorRepository
+    public class ColorRepository : GenericRepository<ApplicationDbContext, Color>, IColorRepository
     {
         public ColorRepository(ApplicationDbContext context) : base(context)
         {

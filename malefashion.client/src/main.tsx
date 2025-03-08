@@ -1,6 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Provider } from 'react-redux'
+import { Provider as ReduxProvider } from 'react-redux'
 import App from './App.tsx'
 import './assets/css/bootstrap.min.css'
 import './assets/css/elegant-icons.css'
@@ -9,17 +9,14 @@ import './assets/css/magnific-popup.css'
 import './assets/css/slicknav.min.css'
 import './assets/css/style.css'
 import store from './store/store.ts'
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { AuthProvider } from './context/AuthContext.tsx'
+import { CookiesProvider } from 'react-cookie'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Provider store={store}>
-      <AuthProvider>
+    <ReduxProvider store={store}>
+      <CookiesProvider defaultSetOptions={{ path: '/' }}>
         <App />
-        <ToastContainer aria-label={undefined} />
-      </AuthProvider>
-    </Provider>
+      </CookiesProvider>
+    </ReduxProvider>
   </StrictMode>,
 )

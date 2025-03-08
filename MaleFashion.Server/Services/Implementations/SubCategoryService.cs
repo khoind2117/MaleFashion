@@ -11,22 +11,19 @@ namespace MaleFashion.Server.Services.Implementations
 {
     public class SubCategoryService : ISubCategoryService
     {
-        private readonly ISubCategoryRepository _subCategoryRepository;
-        private readonly IMainCategoryRepository _mainCategoryRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly SlugUtil _slugUtil;
 
-        public SubCategoryService(ISubCategoryRepository subCategoryRepository,
-            IMainCategoryRepository mainCategoryRepository,
+        public SubCategoryService(IUnitOfWork unitOfWork,
             SlugUtil slugUtil)
         {
-            _subCategoryRepository = subCategoryRepository;
-            _mainCategoryRepository = mainCategoryRepository;
+            _unitOfWork = unitOfWork;
             _slugUtil = slugUtil;
         }
 
         public async Task<IEnumerable<SubCategoryDto>> GetAllAsync()
         {
-            var SubCategories = await _subCategoryRepository.GetAllAsync();
+            var SubCategories = await _unitOfWork.SubCategoryRepository.GetAllAsync();
 
             var subCategoryDtos = SubCategories.Select(subCategory => new SubCategoryDto
             {
@@ -40,7 +37,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<SubCategoryDto> GetByIdAsync(int id)
         {
-            var subCategory = await _subCategoryRepository.GetByIdAsync(id);
+            var subCategory = await _unitOfWork.SubCategoryRepository.GetByIdAsync(id);
             if (subCategory == null)
             {
                 throw new KeyNotFoundException();
@@ -63,7 +60,7 @@ namespace MaleFashion.Server.Services.Implementations
                 throw new ArgumentNullException();
             }
 
-            var mainCategory = await _mainCategoryRepository.GetByIdAsync(subCategoryRequestDto.MainCategoryId.Value);
+            var mainCategory = await _unitOfWork.MainCategoryRepository.GetByIdAsync(subCategoryRequestDto.MainCategoryId.Value);
             if (mainCategory == null)
             {
                 throw new KeyNotFoundException();
@@ -76,12 +73,13 @@ namespace MaleFashion.Server.Services.Implementations
                 MainCategoryId = subCategoryRequestDto.MainCategoryId.Value
             };
 
-            await _subCategoryRepository.AddAsync(subCategory);
+            await _unitOfWork.SubCategoryRepository.AddAsync(subCategory);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(int id, SubCategoryRequestDto subCategoryRequestDto)
         {
-            var subCategory = await _subCategoryRepository.GetByIdAsync(id);
+            var subCategory = await _unitOfWork.SubCategoryRepository.GetByIdAsync(id);
             if (subCategory == null)
             {
                 throw new KeyNotFoundException();
@@ -89,7 +87,7 @@ namespace MaleFashion.Server.Services.Implementations
 
             if (subCategoryRequestDto.MainCategoryId.HasValue)
             {
-                var mainCategory = await _mainCategoryRepository.GetByIdAsync(subCategoryRequestDto.MainCategoryId.Value);
+                var mainCategory = await _unitOfWork.MainCategoryRepository.GetByIdAsync(subCategoryRequestDto.MainCategoryId.Value);
                 if (mainCategory == null)
                 {
                     throw new KeyNotFoundException();
@@ -100,23 +98,25 @@ namespace MaleFashion.Server.Services.Implementations
             subCategory.Name = subCategoryRequestDto.Name;
             subCategory.Slug = _slugUtil.GenerateSlug(subCategoryRequestDto.Name);
 
-            await _subCategoryRepository.UpdateAsync(subCategory);
+            await _unitOfWork.SubCategoryRepository.UpdateAsync(subCategory);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var subCategory = await _subCategoryRepository.GetByIdAsync(id);
+            var subCategory = await _unitOfWork.SubCategoryRepository.GetByIdAsync(id);
             if (subCategory == null)
             {
                 throw new KeyNotFoundException();
             }
 
-            await _subCategoryRepository.DeleteAsync(subCategory);
+            await _unitOfWork.SubCategoryRepository.DeleteAsync(subCategory);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<PagedDto<SubCategoryDto>> GetPagedAsync(SubCategoryFilterDto subCategoryFilterDto)
         {
-            var query = await _subCategoryRepository.GetAllAsync();
+            var query = await _unitOfWork.SubCategoryRepository.GetAllAsync();
 
             if (!string.IsNullOrEmpty(subCategoryFilterDto.Keyword))
             {
@@ -152,7 +152,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<bool> ExistsAsync(int id)
         {
-            var subCategory = await _subCategoryRepository.GetByIdAsync(id);
+            var subCategory = await _unitOfWork.SubCategoryRepository.GetByIdAsync(id);
             return subCategory != null;
         }
     }

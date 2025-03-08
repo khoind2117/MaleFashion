@@ -12,7 +12,7 @@ namespace MaleFashion.Server.Models.Entities
         public decimal Price { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
-        public bool IsDeleted { get; set; }
+        public bool IsActive { get; set; }
 
         public int? SubCategoryId { get; set; }
         public virtual SubCategory? SubCategory { get; set; }

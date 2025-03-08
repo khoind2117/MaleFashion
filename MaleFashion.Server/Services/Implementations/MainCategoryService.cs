@@ -6,24 +6,25 @@ using Microsoft.IdentityModel.Tokens;
 using MaleFashion.Server.Models.Entities;
 using MaleFashion.Server.Models.DTOs.MainCategory;
 using MaleFashion.Server.Utilities;
+using MaleFashion.Server.Repositories.Implementations;
 
 namespace MaleFashion.Server.Services.Implementations
 {
     public class MainCategoryService : IMainCategoryService
     {
-        private readonly IMainCategoryRepository _mainCategoryRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly SlugUtil _slugUtil;
 
-        public MainCategoryService(IMainCategoryRepository mainCategoryRepository,
+        public MainCategoryService(IUnitOfWork unitOfWork,
             SlugUtil slugUtil)
         {
-            _mainCategoryRepository = mainCategoryRepository;
+            _unitOfWork = unitOfWork;
             _slugUtil = slugUtil;
         }
 
         public async Task<IEnumerable<MainCategoryDto>> GetAllAsync()
         {
-            var mainCategories = await _mainCategoryRepository.GetAllAsync();
+            var mainCategories = await _unitOfWork.MainCategoryRepository.GetAllAsync();
 
             var mainCategoryDtos = mainCategories.Select(mainCateogry => new MainCategoryDto
             {
@@ -37,7 +38,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<MainCategoryDto> GetByIdAsync(int id)
         {
-            var mainCategory = await _mainCategoryRepository.GetByIdAsync(id);
+            var mainCategory = await _unitOfWork.MainCategoryRepository.GetByIdAsync(id);
             if (mainCategory == null)
             {
                 throw new KeyNotFoundException();
@@ -61,12 +62,13 @@ namespace MaleFashion.Server.Services.Implementations
                 Slug = _slugUtil.GenerateSlug(mainCategoryRequestDto.Name)
             };
 
-            await _mainCategoryRepository.AddAsync(mainCategory);
+            await _unitOfWork.MainCategoryRepository.AddAsync(mainCategory);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(int id, MainCategoryRequestDto mainCategoryRequestDto)
         {
-            var mainCategory = await _mainCategoryRepository.GetByIdAsync(id);
+            var mainCategory = await _unitOfWork.MainCategoryRepository.GetByIdAsync(id);
             if (mainCategory == null)
             {
                 throw new KeyNotFoundException();
@@ -75,23 +77,25 @@ namespace MaleFashion.Server.Services.Implementations
             mainCategory.Name = mainCategoryRequestDto.Name;
             mainCategory.Slug = _slugUtil.GenerateSlug(mainCategoryRequestDto.Name);
 
-            await _mainCategoryRepository.UpdateAsync(mainCategory);
+            await _unitOfWork.MainCategoryRepository.UpdateAsync(mainCategory);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var mainCategory = await _mainCategoryRepository.GetByIdAsync(id);
+            var mainCategory = await _unitOfWork.MainCategoryRepository.GetByIdAsync(id);
             if (mainCategory == null)
             {
                 throw new KeyNotFoundException();
             }
 
-            await _mainCategoryRepository.DeleteAsync(mainCategory);
+            await _unitOfWork.MainCategoryRepository.DeleteAsync(mainCategory);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<PagedDto<MainCategoryDto>> GetPagedAsync(MainCategoryFilterDto mainCategoryFilterDto)
         {
-            var query = await _mainCategoryRepository.GetAllAsync();
+            var query = await _unitOfWork.MainCategoryRepository.GetAllAsync();
 
             if (!string.IsNullOrEmpty(mainCategoryFilterDto.Keyword))
             {
@@ -127,7 +131,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<bool> ExistsAsync(int id)
         {
-            var mainCategory = await _mainCategoryRepository.GetByIdAsync(id);
+            var mainCategory = await _unitOfWork.MainCategoryRepository.GetByIdAsync(id);
             return mainCategory != null;
         }
     }

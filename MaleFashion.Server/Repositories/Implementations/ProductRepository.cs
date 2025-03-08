@@ -9,7 +9,7 @@ using MaleFashion.Server.Models.DTOs.Color;
 
 namespace MaleFashion.Server.Repositories.Implementations
 {
-    public class ProductRepository : Repository<ApplicationDbContext, Product>, IProductRepository
+    public class ProductRepository : GenericRepository<ApplicationDbContext, Product>, IProductRepository
     {
         public ProductRepository(ApplicationDbContext context) : base(context) { }
 

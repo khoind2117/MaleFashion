@@ -8,11 +8,11 @@ namespace MaleFashion.Server.Services.Implementations
 {
     public class SizeService : ISizeService
     {
-        private readonly ISizeRepository _sizeRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public SizeService(ISizeRepository sizeRepository)
+        public SizeService(IUnitOfWork unitOfWork)
         {
-            _sizeRepository = sizeRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task AddAsync(SizeRequestDto sizeRequestDto)
@@ -22,29 +22,31 @@ namespace MaleFashion.Server.Services.Implementations
                 Name = sizeRequestDto.Name,
             };
 
-            await _sizeRepository.AddAsync(size);
+            await _unitOfWork.SizeRepository.AddAsync(size);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var size = await _sizeRepository.GetByIdAsync(id);
+            var size = await _unitOfWork.SizeRepository.GetByIdAsync(id);
             if (size == null)
             {
                 throw new KeyNotFoundException();
             }
 
-            await _sizeRepository.DeleteAsync(size);
+            await _unitOfWork.SizeRepository.DeleteAsync(size);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<bool> ExistsAsync(int id)
         {
-            var size = await _sizeRepository.GetByIdAsync(id);
+            var size = await _unitOfWork.SizeRepository.GetByIdAsync(id);
             return size != null;
         }
 
         public async Task<IEnumerable<SizeDto>> GetAllAsync()
         {
-            var sizes = await _sizeRepository.GetAllAsync();
+            var sizes = await _unitOfWork.SizeRepository.GetAllAsync();
 
             var sizeDtos = sizes.Select(size => new SizeDto
             {
@@ -57,7 +59,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<SizeDto> GetByIdAsync(int id)
         {
-            var size = await _sizeRepository.GetByIdAsync(id);
+            var size = await _unitOfWork.SizeRepository.GetByIdAsync(id);
             if (size == null)
             {
                 throw new KeyNotFoundException();
@@ -74,7 +76,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<PagedDto<SizeDto>> GetPagedAsync(SizeFilterDto sizeFilterDto)
         {
-            var query = await _sizeRepository.GetAllAsync();
+            var query = await _unitOfWork.SizeRepository.GetAllAsync();
 
             if (!string.IsNullOrEmpty(sizeFilterDto.Keyword))
             {
@@ -108,7 +110,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task UpdateAsync(int id, SizeRequestDto sizeRequestDto)
         {
-            var size = await _sizeRepository.GetByIdAsync(id);
+            var size = await _unitOfWork.SizeRepository.GetByIdAsync(id);
             if (size == null)
             {
                 throw new KeyNotFoundException();
@@ -116,7 +118,8 @@ namespace MaleFashion.Server.Services.Implementations
 
             size.Name = sizeRequestDto.Name;
 
-            await _sizeRepository.UpdateAsync(size);
+            await _unitOfWork.SizeRepository.UpdateAsync(size);
+            await _unitOfWork.SaveChangesAsync();
         }
     }
 }

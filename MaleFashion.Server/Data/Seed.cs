@@ -4,6 +4,7 @@ using MaleFashion.Server.Services.Interfaces;
 using MaleFashion.Server.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace MaleFashion.Server.Data
 {
@@ -51,7 +52,7 @@ namespace MaleFashion.Server.Data
                     }
                 };
 
-                _context.Roles.AddRange(roles);
+                await _context.Roles.AddRangeAsync(roles);
                 await _context.SaveChangesAsync();
             }
             #endregion
@@ -80,6 +81,23 @@ namespace MaleFashion.Server.Data
                 await _userManager.CreateAsync(admin, "Admin@123");
                 await _userManager.AddToRoleAsync(admin, "Admin");
 
+                await _context.SaveChangesAsync();
+            }
+            #endregion
+
+            #region OrderStatus
+            if (!_context.OrderStatuses.Any())
+            {
+                var orderStatuses = new List<OrderStatus>
+                {
+                    new OrderStatus { Name = "Pending" },
+                    new OrderStatus { Name = "Processing" },
+                    new OrderStatus { Name = "Out for Delivery" },
+                    new OrderStatus { Name = "Delivered" },
+                    new OrderStatus { Name = "Cancelled" }
+                };
+
+                await _context.OrderStatuses.AddRangeAsync(orderStatuses);
                 await _context.SaveChangesAsync();
             }
             #endregion

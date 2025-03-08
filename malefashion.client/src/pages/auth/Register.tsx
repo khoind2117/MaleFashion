@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MainLayout from '../../layouts/MainLayout';
-import { useNavigate } from 'react-router-dom';
-import accountApi from '../../services/api/accountApi';
 import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -14,7 +14,14 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/cart');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -24,24 +31,15 @@ const Register = () => {
       return;
     }
 
-    const registerData = {
-      firstName,
-      lastName,
-      email,
-      phoneNumber,
-      address,
-      password,
-    };
-
     try {
-      const response = await accountApi.register(registerData);
-
-      if (response.status !== 200) {
-        toast.error("Đăng ký thất bại")
-      }
-
-      toast.success("Đăng ký thành công")
-      navigate('/login');
+      await register({
+        firstName,
+        lastName,
+        email,
+        phoneNumber,
+        address,
+        password,
+      });
     } catch (error) {
       console.error(error);
       setError('Đăng ký thất bại');

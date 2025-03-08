@@ -10,16 +10,16 @@ namespace MaleFashion.Server.Services.Implementations
 {
     public class ColorService : IColorService
     {
-        private readonly IColorRepository _colorRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ColorService(IColorRepository colorRepository)
+        public ColorService(IUnitOfWork unitOfWork)
         {
-            _colorRepository = colorRepository;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task<IEnumerable<ColorDto>> GetAllAsync()
         {
-            var colors = await _colorRepository.GetAllAsync();
+            var colors = await _unitOfWork.ColorRepository.GetAllAsync();
 
             var colorDtos = colors.Select(color => new ColorDto
             {
@@ -33,7 +33,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<ColorDto> GetByIdAsync(int id)
         {
-            var color = await _colorRepository.GetByIdAsync(id);
+            var color = await _unitOfWork.ColorRepository.GetByIdAsync(id);
             if (color == null)
             {
                 throw new KeyNotFoundException("Color not found");
@@ -57,12 +57,13 @@ namespace MaleFashion.Server.Services.Implementations
                 ColorCode = colorRequestDto.ColorCode
             };
 
-            await _colorRepository.AddAsync(color);
+            await _unitOfWork.ColorRepository.AddAsync(color);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(int id, ColorRequestDto colorRequestDto)
         {
-            var color = await _colorRepository.GetByIdAsync(id);
+            var color = await _unitOfWork.ColorRepository.GetByIdAsync(id);
             if (color == null)
             {
                 throw new KeyNotFoundException("Color not found");
@@ -71,23 +72,25 @@ namespace MaleFashion.Server.Services.Implementations
             color.Name = colorRequestDto.Name;
             color.ColorCode = colorRequestDto.ColorCode;
 
-            await _colorRepository.UpdateAsync(color);
+            await _unitOfWork.ColorRepository.UpdateAsync(color);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var color = await _colorRepository.GetByIdAsync(id);
+            var color = await _unitOfWork.ColorRepository.GetByIdAsync(id);
             if (color == null)
             {
                 throw new KeyNotFoundException("Color not found");
             }
 
-            await _colorRepository.DeleteAsync(color);
+            await _unitOfWork.ColorRepository.DeleteAsync(color);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<PagedDto<ColorDto>> GetPagedAsync(ColorFilterDto colorFilterDto)
         {
-            var query = await _colorRepository.GetAllAsync();
+            var query = await _unitOfWork.ColorRepository.GetAllAsync();
 
             if (!string.IsNullOrEmpty(colorFilterDto.Keyword))
             {
@@ -123,7 +126,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<bool> ExistsAsync(int id)
         {
-            var color = await _colorRepository.GetByIdAsync(id);
+            var color = await _unitOfWork.ColorRepository.GetByIdAsync(id);
             return color != null;
         }
     }

@@ -4,7 +4,7 @@ using MaleFashion.Server.Models.Entities;
 
 namespace MaleFashion.Server.Repositories.Interfaces
 {
-    public interface IProductRepository : IRepository<Product>
+    public interface IProductRepository : IGenericRepository<Product>
     {
         Task<Product?> GetProductById(int id);
         Task<PagedDto<PagedProductDto>> GetPagedProductsAsync(ProductFilterDto productFilterDto);

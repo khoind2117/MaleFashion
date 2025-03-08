@@ -111,11 +111,12 @@ namespace MaleFashion.Server.Services.Implementations
 
             var newAccessToken = CreateAccessToken(user, roles.ToList());
             var newRefreshToken = GenerateRefreshToken();
+
             user.RefreshToken = newRefreshToken;
             user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(10);
             await _userManager.UpdateAsync(user);
 
-            response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+            response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,

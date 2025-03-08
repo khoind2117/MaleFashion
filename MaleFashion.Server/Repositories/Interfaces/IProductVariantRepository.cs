@@ -2,8 +2,9 @@
 
 namespace MaleFashion.Server.Repositories.Interfaces
 {
-    public interface IProductVariantRepository : IRepository<ProductVariant>
+    public interface IProductVariantRepository : IGenericRepository<ProductVariant>
     {
         Task<IEnumerable<ProductVariant>> GetByProductIdAsync(int productId);
+        Task<List<ProductVariant>> GetProductVariantsByIdsAsync(List<int> productVariantIds);
     }
 }

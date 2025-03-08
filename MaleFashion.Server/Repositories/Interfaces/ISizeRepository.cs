@@ -2,7 +2,7 @@
 
 namespace MaleFashion.Server.Repositories.Interfaces
 {
-    public interface ISizeRepository : IRepository<Size>
+    public interface ISizeRepository : IGenericRepository<Size>
     {
     }
 }

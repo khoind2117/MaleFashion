@@ -24,7 +24,7 @@ const notificationMiddleware: Middleware = () => (next) => (action)  => {
 
     switch (typedAction.type) {
         case addToCart.type:
-            showToast("Sản phẩm đã thêm vào giỏ hàng!", "success");
+            showToast("Item added to cart successfully", "success");
             break;
         case removeFromCart.type:
             showToast("Sản phẩm đã bị xóa khỏi giỏ hàng!", "warning");

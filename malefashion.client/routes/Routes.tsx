@@ -6,6 +6,7 @@ import CartPage from "../src/pages/client/Cart/CartPage";
 import CheckoutPage from "../src/pages/client/Checkout/CheckoutPage";
 import Login from "../src/pages/auth/Login";
 import Register from "../src/pages/auth/Register";
+import ProtectedRoute from "./ProtectedRoute"
 
 export interface Route {
   path: string;
@@ -19,7 +20,7 @@ const routes: Route[] = [
   { path: "/shop", element: <ShopPage/> },
   { path: "/product/:productId", element: <ProductDetailPage/> },
   { path: "/cart", element: <CartPage/> },
-  { path: "/checkout", element: <CheckoutPage/> },
+  { path: "/checkout", element: <ProtectedRoute><CheckoutPage/></ProtectedRoute> },
   
 ];
 

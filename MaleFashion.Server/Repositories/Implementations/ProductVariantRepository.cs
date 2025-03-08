@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace MaleFashion.Server.Repositories.Implementations
 {
-    public class ProductVariantRepository : Repository<ApplicationDbContext, ProductVariant>, IProductVariantRepository
+    public class ProductVariantRepository : GenericRepository<ApplicationDbContext, ProductVariant>, IProductVariantRepository
     {
         public ProductVariantRepository(ApplicationDbContext context) : base(context)
         {
@@ -15,5 +15,16 @@ namespace MaleFashion.Server.Repositories.Implementations
         {
             return await _dbSet.Where(pv => pv.ProductId == productId).ToListAsync();
         }
+
+        public async Task<List<ProductVariant>> GetProductVariantsByIdsAsync(List<int> productVariantIds)
+        {
+            return await _dbSet.Where(pv => productVariantIds.Contains(pv.Id))
+                                .Include(pv => pv.Product)
+                                .Include(pv => pv.Color)
+                                .Include(pv => pv.Size)
+                                .AsSplitQuery()
+                                .ToListAsync();
+        }
+
     }
 }

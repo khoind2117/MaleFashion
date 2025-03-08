@@ -30,6 +30,12 @@ namespace MaleFashion.Server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<Guid?>("BasketId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("LastUpdated")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(450)");
 
@@ -58,9 +64,6 @@ namespace MaleFashion.Server.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -168,7 +171,7 @@ namespace MaleFashion.Server.Migrations
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OrderStatusId")
+                    b.Property<int>("OrderStatusId")
                         .HasColumnType("int");
 
                     b.Property<string>("PaymentMethod")
@@ -251,7 +254,7 @@ namespace MaleFashion.Server.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("IsDeleted")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -619,7 +622,8 @@ namespace MaleFashion.Server.Migrations
                     b.HasOne("MaleFashion.Server.Models.Entities.OrderStatus", "OrderStatus")
                         .WithMany("Orders")
                         .HasForeignKey("OrderStatusId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("MaleFashion.Server.Models.Entities.User", "User")
                         .WithMany("Orders")

@@ -1,30 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import MainLayout from '../../layouts/MainLayout';
-import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
 
-  const { login } = React.useContext(AuthContext)!;
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/cart');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
     try {
       await login({ userName: email, password });
-      toast.success("Đăng nhập thành công")
-
-      navigate('/');
     } catch (error) {
-      console.error(error);
-      setError('Đăng nhập thất bại');
-      toast.error("Đăng nhập thất bại")
-
+      console.error("Error during login attempt:", error);
     }
   };
 
@@ -34,9 +32,6 @@ const Login = () => {
         <form onSubmit={handleSubmit} role="form">
           <h1>Đăng nhập</h1>
           <hr />
-
-          {/* Error Message */}
-          {error && <div className="text-danger">{error}</div>}
 
           <div className="form-group mb-3">
             <label htmlFor="Email">Email</label>

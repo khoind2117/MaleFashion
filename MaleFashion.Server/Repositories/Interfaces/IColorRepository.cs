@@ -2,7 +2,7 @@
 
 namespace MaleFashion.Server.Repositories.Interfaces
 {
-    public interface IColorRepository : IRepository<Color>
+    public interface IColorRepository : IGenericRepository<Color>
     {
     }
 }

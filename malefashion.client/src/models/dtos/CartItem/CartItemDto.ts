@@ -1,10 +1,7 @@
 import { ProductVariantDto } from "../ProductVariant/ProductVariantDto";
 
-export interface CartItem {
-    name: string,
+export interface CartItemDto {
     quantity: number,
-    unitPrice: number,
-    
     productVariantId: number,
-    productVariantDto: ProductVariantDto
+    productVariantDto: ProductVariantDto,
 }

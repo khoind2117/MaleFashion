@@ -17,12 +17,9 @@ namespace MaleFashion.Server.Models.Entities
         public string? UserId { get; set; }
         public virtual User? User { get; set; }
 
-        public int? OrderStatusId { get; set; }
+        public int OrderStatusId { get; set; }
         public virtual OrderStatus? OrderStatus { get; set; }
 
         public virtual ICollection<OrderItem>? OrderItems { get; set; }
-
-        [NotMapped]
-        public decimal TotalAmount => OrderItems.Sum(oi => oi.TotalPrice);
     }
 }

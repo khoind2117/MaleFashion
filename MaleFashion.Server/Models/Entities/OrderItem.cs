@@ -14,8 +14,5 @@ namespace MaleFashion.Server.Models.Entities
 
         public int OrderId { get; set; }
         public virtual Order? Order { get; set; }
-
-        [NotMapped]
-        public decimal TotalPrice => Quantity * UnitPrice;
     }
 }

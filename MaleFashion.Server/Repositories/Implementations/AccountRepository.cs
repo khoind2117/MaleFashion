@@ -22,6 +22,12 @@ namespace MaleFashion.Server.Repositories.Implementations
             return result.Succeeded;
         }
 
+        public async Task<bool> UpdateUserAsync(User user)
+        {
+            var result = await _userManager.UpdateAsync(user);
+            return result.Succeeded;
+        }
+
         public async Task<User?> FindByUserNameAsync(string username)
         {
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == username.ToLower());

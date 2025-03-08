@@ -1,6 +1,7 @@
 ﻿using MaleFashion.Server.Models.DTOs.Account;
 using MaleFashion.Server.Services.Implementations;
 using MaleFashion.Server.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MaleFashion.Server.Controllers
@@ -17,6 +18,25 @@ namespace MaleFashion.Server.Controllers
         {
             _accountService = accountService;
             _tokenService = tokenService;
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser()
+        {
+            try
+            {
+                var userDto = await _accountService.GetCurrentUser(User);
+                return Ok(userDto);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Unauthorized(new { message = "Invalid token" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
         }
 
         [HttpPost("register")]
@@ -59,7 +79,7 @@ namespace MaleFashion.Server.Controllers
                     return Ok(authResult);
                 }
 
-                return Unauthorized("Incorrect username or password.");
+                return BadRequest(new { message = "Incorrect username or password." });
             }
             catch (Exception ex)
             {
@@ -67,6 +87,7 @@ namespace MaleFashion.Server.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
@@ -82,21 +103,32 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RefreshToken()
         {
+            if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+            {
+                return Unauthorized("No refresh token provided");
+            }
+
             var newAccessToken = await _tokenService.RefreshAccessTokenAsync(refreshToken, Response);
 
             if (newAccessToken == null)
             {
-                return Unauthorized("Invalid refresh token");
+                return Unauthorized("Invalid or expired refresh token");
             }
 
             return Ok(new { accessToken = newAccessToken });
         }
 
+        [Authorize]
         [HttpPost("revoke-token")]
-        public async Task<IActionResult> RevokeToken([FromBody] string refreshToken)
+        public async Task<IActionResult> RevokeToken()
         {
+            if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
+            {
+                return Unauthorized("No refresh token provided");
+            }
+
             var isRevoked = await _tokenService.RevokeRefreshTokenAsync(refreshToken, Response);
 
             if (!isRevoked)

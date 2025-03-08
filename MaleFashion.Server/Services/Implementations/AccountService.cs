@@ -1,24 +1,26 @@
 ﻿using Azure;
 using MaleFashion.Server.Models.DTOs.Account;
+using MaleFashion.Server.Models.DTOs.User;
 using MaleFashion.Server.Models.Entities;
 using MaleFashion.Server.Repositories.Interfaces;
 using MaleFashion.Server.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace MaleFashion.Server.Services.Implementations
 {
     public class AccountService : IAccountService
     {
-        private readonly IAccountRepository _accountRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ITokenService _tokenService;
         private readonly UserManager<User> _userManager;
 
-        public AccountService(IAccountRepository accountRepository,
+        public AccountService(IUnitOfWork unitOfWork,
             ITokenService tokenService,
             UserManager<User> userManager)
         {
-            _accountRepository = accountRepository;
+            _unitOfWork = unitOfWork;
             _tokenService = tokenService;
             _userManager = userManager;
         }
@@ -26,6 +28,7 @@ namespace MaleFashion.Server.Services.Implementations
         private async Task<AuthResponseDto> CreateAuthResponseDtoAsync(User user)
         {
             var roles = await _userManager.GetRolesAsync(user);
+            var accessToken = _tokenService.CreateAccessToken(user, roles.ToList());
 
             return new AuthResponseDto
             {
@@ -33,9 +36,36 @@ namespace MaleFashion.Server.Services.Implementations
                 UserName = user.UserName,
                 Email = user.Email,
                 Roles = roles.ToList(),
-                Token = _tokenService.CreateAccessToken(user, roles.ToList()),
-                RefreshToken = user.RefreshToken,
+                AccessToken = accessToken,
             };
+        }
+
+        public async Task<UserDto?> GetCurrentUser(ClaimsPrincipal userPrincipal)
+        {
+            var userId = userPrincipal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (userId == null)
+            {
+                throw new UnauthorizedAccessException("Invalid token");
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                throw new UnauthorizedAccessException("User not found");
+            }
+
+            var userDto = new UserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Address = user.Address,
+                PhoneNumber = user.PhoneNumber,
+                Email = user.Email,
+            };
+
+            return userDto;
         }
 
         public async Task<AuthResponseDto?> RegisterUserAsync(RegisterDto registerDto)
@@ -52,23 +82,34 @@ namespace MaleFashion.Server.Services.Implementations
                 RefreshTokenExpiryTime = DateTime.Now.AddDays(10),
             };
 
-            var result = await _accountRepository.CreateUserAsync(user, registerDto.Password);
+            var result = await _unitOfWork.AccountRepository.CreateUserAsync(user, registerDto.Password);
             if (!result) return null;
 
             await _userManager.AddToRoleAsync(user, "User");
+
+
+            // Create User Cart After Successfully Register
+            var cart = new Cart { UserId = user.Id };
+            await _unitOfWork.CartRepository.AddAsync(cart);
+            await _unitOfWork.SaveChangesAsync();
 
             return await CreateAuthResponseDtoAsync(user);
         }
 
         public async Task<AuthResponseDto?> LoginUserAsync(LoginDto loginDto, HttpResponse response)
         {
-            var user = await _accountRepository.FindByUserNameAsync(loginDto.UserName);
+            var user = await _unitOfWork.AccountRepository.FindByUserNameAsync(loginDto.UserName);
             if (user == null) return null;
 
-            var isPasswordValid = await _accountRepository.CheckPasswordAsync(user, loginDto.Password);
+            var isPasswordValid = await _unitOfWork.AccountRepository.CheckPasswordAsync(user, loginDto.Password);
             if (!isPasswordValid) return null;
 
-            response.Cookies.Append("refreshToken", user.RefreshToken, new CookieOptions
+            var newRefreshToken = _tokenService.GenerateRefreshToken();
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(10);
+            await _userManager.UpdateAsync(user);
+
+            response.Cookies.Append("refreshToken", newRefreshToken, new CookieOptions
             {
                 HttpOnly = true,
                 Secure = true,
@@ -95,6 +136,7 @@ namespace MaleFashion.Server.Services.Implementations
             }
 
             response.Cookies.Delete("refreshToken");
+            response.Cookies.Delete("BasketId");
         }
     }
 }

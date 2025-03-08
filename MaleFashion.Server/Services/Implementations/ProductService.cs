@@ -15,19 +15,19 @@ namespace MaleFashion.Server.Services.Implementations
 {
     public class ProductService : IProductService
     {
-        private readonly IProductRepository _productRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly SlugUtil _slugUtil;
 
-        public ProductService(IProductRepository productRepository,
+        public ProductService(IUnitOfWork unitOfWork,
             SlugUtil slugUtil)
         {
-            _productRepository = productRepository;
+            _unitOfWork = unitOfWork;
             _slugUtil = slugUtil;
         }
 
         public async Task<IEnumerable<ProductDto>> GetAllAsync()
         {
-            var products = await _productRepository.GetAllAsync();
+            var products = await _unitOfWork.ProductRepository.GetAllAsync();
 
             var productDto = products.Select(product => new ProductDto
             {
@@ -38,7 +38,7 @@ namespace MaleFashion.Server.Services.Implementations
                 Price = product.Price,
                 CreatedAt = product.CreatedAt,
                 UpdatedAt = product.UpdatedAt,
-                IsDeleted = product.IsDeleted
+                IsActive = product.IsActive
             });
 
             return productDto;
@@ -46,7 +46,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<ProductDetailDto> GetByIdAsync(int id)
         {
-            var product = await _productRepository.GetProductById(id);
+            var product = await _unitOfWork.ProductRepository.GetProductById(id);
             if (product == null)
             {
                 throw new KeyNotFoundException();
@@ -69,7 +69,7 @@ namespace MaleFashion.Server.Services.Implementations
                 {
                     Id = pv.Id,
                     Stock = pv.Stock,
-                    ProductId = pv.ProductId,
+                    //ProductId = pv.ProductId,
                     ColorDto = pv.Color != null ? new ColorDto
                     {
                         Id = pv.Color.Id,
@@ -97,16 +97,17 @@ namespace MaleFashion.Server.Services.Implementations
                 Price = productRequestDto.Price,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now,
-                IsDeleted = false,
+                IsActive = false,
                 SubCategoryId = productRequestDto.SubCategoryId,
             };
 
-            await _productRepository.AddAsync(product);
+            await _unitOfWork.ProductRepository.AddAsync(product);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task UpdateAsync(int id, ProductRequestDto productRequestDto)
         {
-            var product = await _productRepository.GetByIdAsync(id);
+            var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
             if (product == null)
             {
                 throw new KeyNotFoundException();
@@ -119,36 +120,39 @@ namespace MaleFashion.Server.Services.Implementations
             product.UpdatedAt = DateTime.Now;
             product.SubCategoryId = productRequestDto.SubCategoryId;
 
-            await _productRepository.UpdateAsync(product);
+            await _unitOfWork.ProductRepository.UpdateAsync(product);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task SoftDeleteAsync(int id)
         {
-            var product = await _productRepository.GetByIdAsync(id);
+            var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
             if (product == null)
             {
                 throw new KeyNotFoundException();
             }
 
-            product.IsDeleted = true;
+            product.IsActive = true;
 
-            await _productRepository.UpdateAsync(product);
+            await _unitOfWork.ProductRepository.UpdateAsync(product);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task HardDeleteAsync(int id)
         {
-            var product = await _productRepository.GetByIdAsync(id);
+            var product = await _unitOfWork.ProductRepository.GetByIdAsync(id);
             if (product == null)
             {
                 throw new KeyNotFoundException();
             }
 
-            await _productRepository.DeleteAsync(product);
+            await _unitOfWork.ProductRepository.DeleteAsync(product);
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<PagedDto<PagedProductDto>> GetPagedAsync(ProductFilterDto productFilterDto)
         {
-            var pagedProducts = await _productRepository.GetPagedProductsAsync(productFilterDto);
+            var pagedProducts = await _unitOfWork.ProductRepository.GetPagedProductsAsync(productFilterDto);
             
             return pagedProducts;
         }
@@ -156,7 +160,7 @@ namespace MaleFashion.Server.Services.Implementations
 
         public async Task<bool> ExistsAsync(int id)
         {
-            return await _productRepository.ExistsAsync(id);
+            return await _unitOfWork.ProductRepository.ExistsAsync(id);
         }
     }
 }

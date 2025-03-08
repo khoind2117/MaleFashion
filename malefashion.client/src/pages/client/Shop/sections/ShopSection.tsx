@@ -1,4 +1,4 @@
-import { FormControl, InputLabel, List, ListItem, MenuItem, Select, SelectChangeEvent } from "@mui/material";
+import { FormControl, IconButton, InputLabel, List, ListItem, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { useEffect, useState } from "react";
 import AccordionItem from "../../../../components/accordion/AccordionItem";
 import mainCategoryApi from "../../../../services/api/mainCategoryApi";
@@ -11,6 +11,11 @@ import productApi from "../../../../services/api/productApi";
 import { PagedProductDtos } from "../../../../models/dtos/Product/PagedProductDto";
 import Pagination from "../../../../components/pagination/Pagination";
 import { Link } from "react-router";
+import { RootState } from "../../../../store/store";
+import { useDispatch, useSelector } from "react-redux";
+import Favorite from "@mui/icons-material/Favorite";
+import { FavoriteBorder } from "@mui/icons-material";
+import { toggleWishList } from "../../../../store/wishListSlice";
 
 const ShopSection = () => {
     const [selectedSort, setSelectedSort] = useState("new-arrivals");
@@ -111,7 +116,9 @@ const ShopSection = () => {
         });
     }, [products]);
 
- 
+    const dispatch = useDispatch();
+    const wishLists = useSelector((state: RootState) => state.wishList);
+
     return (
     // Shop Section Begin
     <section className="shop spad">
@@ -281,57 +288,64 @@ const ShopSection = () => {
                     </div>
                     <div className="row">
                         {/* Products */}
-                        {products.map((product) => (
-                            <div className="col-lg-4 col-md-6 col-sm-6" key={product.id}>
+                        {products.map((product) => {
+                            const isWishList = wishLists.includes(product.id);
+
+                            return (
+                                <div className="col-lg-4 col-md-6 col-sm-6" key={product.id}>
                                 <div className="product__item">
-                                    <div className="product__item__pic set-bg"
-                                        data-setbg="/src/assets/img/client/product/product-2.jpg"
-                                    >
-                                        <ul className="product__hover">
-                                            <li><a href="#"><img src="/src/assets/img/client/icon/heart.png" alt=""/></a></li>
-                                            <li><a href="#"><img src="/src/assets/img/client/icon/compare.png" alt=""/> <span>Compare</span></a>
-                                            </li>
-                                            <li>
-                                                <Link to={`/product/${product.id}`}>
-                                                    <img src="/src/assets/img/client/icon/search.png" alt=""/>
-                                                </Link>
-                                            </li>
-                                        </ul>
+                                    <div className="product__item__pic set-bg" data-setbg="/src/assets/img/client/product/product-2.jpg">
+                                    <ul className="product__hover">
+                                        <li>
+                                            <IconButton onClick={() => dispatch(toggleWishList(product.id))}>
+                                                {isWishList ? <Favorite sx={{ color: "red" }} /> : <FavoriteBorder />}
+                                            </IconButton>
+                                        </li>
+                                        <li>
+                                        <a href="#"><img src="/src/assets/img/client/icon/compare.png" alt="" /> <span>Compare</span></a>
+                                        </li>
+                                        <li>
+                                            <Link to={`/product/${product.id}`}>
+                                                <img src="/src/assets/img/client/icon/search.png" alt="" />
+                                            </Link>
+                                        </li>
+                                    </ul>
                                     </div>
                                     <div className="product__item__text">
-                                        <h6>{product.name}</h6>
-                                        <a href="#" className="add-cart">+ Add To Cart</a>
-                                        <div className="rating">
-                                            <i className="fa fa-star-o"></i>
-                                            <i className="fa fa-star-o"></i>
-                                            <i className="fa fa-star-o"></i>
-                                            <i className="fa fa-star-o"></i>
-                                            <i className="fa fa-star-o"></i>
-                                        </div>
-                                        <h5>${product.price}</h5>
-                                        <div className="product__color__select">
-                                            {product.colors.map((color) => (
-                                                <label 
-                                                    key={color.id} 
-                                                    style={{
-                                                        background: color.colorCode,
-                                                        border: "1px solid black",
-                                                    }}
-                                                    htmlFor={`color-${color.id}`}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        id={`color-${color.id}`}
-                                                        name={`color-${product.id}`}
-                                                        value={color.id}
-                                                    />
-                                                </label>
-                                            ))}
-                                        </div>
+                                    <h6>{product.name}</h6>
+                                    <a href="#" className="add-cart">+ Add To Cart</a>
+                                    <div className="rating">
+                                        <i className="fa fa-star-o"></i>
+                                        <i className="fa fa-star-o"></i>
+                                        <i className="fa fa-star-o"></i>
+                                        <i className="fa fa-star-o"></i>
+                                        <i className="fa fa-star-o"></i>
+                                    </div>
+                                    <h5>${product.price}</h5>
+                                    <div className="product__color__select">
+                                        {product.colors.map((color) => (
+                                        <label
+                                            key={color.id}
+                                            style={{
+                                            background: color.colorCode,
+                                            border: "1px solid black",
+                                            }}
+                                            htmlFor={`color-${color.id}`}
+                                        >
+                                            <input
+                                            type="radio"
+                                            id={`color-${color.id}`}
+                                            name={`color-${product.id}`}
+                                            value={color.id}
+                                            />
+                                        </label>
+                                        ))}
+                                    </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                                </div>
+                            );
+                            })}
                         {/* <div className="col-lg-4 col-md-6 col-sm-6">
                             <div className="product__item sale">
                                 <div className="product__item__pic set-bg" data-setbg="/src/assets/img/client/product/product-3.jpg">

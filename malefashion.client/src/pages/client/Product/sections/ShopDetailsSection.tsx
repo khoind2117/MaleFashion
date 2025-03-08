@@ -5,9 +5,15 @@ import { useEffect, useState } from 'react';
 import productApi from '../../../../services/api/productApi';
 import { ProductDetailDto } from '../../../../models/dtos/Product/ProductDetailDto';
 import { addToCart } from '../../../../store/cartSlice';
-import { useDispatch } from 'react-redux';
-import { CartItem } from '../../../../models/dtos/CartItem/CartItem';
+import { useDispatch, useSelector } from 'react-redux';
 import ProductQuantitySelector from '../../../../components/ui/ProductQuantitySelector';
+import { addRecentlyViewed } from '../../../../store/recentlyViewSlice';
+import { IconButton } from '@mui/material';
+import { Favorite, FavoriteBorder } from '@mui/icons-material';
+import { AppDispatch, RootState } from '../../../../store/store';
+import { toggleWishList } from '../../../../store/wishListSlice';
+import { CartItemRequestDto } from '../../../../models/dtos/CartItem/CartItemRequestDto';
+import { toast } from 'react-toastify';
 
 const ShopDetailsSection = () => {
     const params = useParams();
@@ -15,8 +21,10 @@ const ShopDetailsSection = () => {
 
     const [product, setProduct] = useState<ProductDetailDto | null>(null);
     const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
-    const [activeSize, setActiveSize] = useState<number | null>(null);
+    const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(1);
+
+    const dispatch = useDispatch<AppDispatch>();
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -26,14 +34,17 @@ const ShopDetailsSection = () => {
 
                 if (response.data.productVariantDtos.length > 0) {
                     setSelectedColorId(response.data.productVariantDtos[0].colorDto.id);
+                    setSelectedSizeId(response.data.productVariantDtos[0].sizeDto.id);
                 }
+
+                dispatch(addRecentlyViewed(productId));
             } catch (error) {
                 console.error("Error fetching product:", error);
             }
         };
 
         fetchProduct();
-    }, [productId]);
+    }, [dispatch, productId]);
 
     const uniqueColors = Array.from(
         new Map(
@@ -58,39 +69,42 @@ const ShopDetailsSection = () => {
 
     const handleColorChange = (colorId: number) => {
         setSelectedColorId(colorId);
-        setActiveSize(null);
+
+        const firstSize = product?.productVariantDtos
+            .find((variant) => variant.colorDto.id === colorId)
+            ?.sizeDto.id;
+        setSelectedSizeId(firstSize || null);
     };
 
     const handleSizeSelection = (sizeId: number) => {
-        setActiveSize(sizeId);
+        setSelectedSizeId(sizeId);
     };
 
-    const dispatch = useDispatch();
     const handleAddToCart = () => {
-        if (!selectedColorId || !activeSize) {
-            alert("Vui lòng chọn màu sắc và kích thước!");
+        if (!selectedColorId || !selectedSizeId) {
+            toast.warning("Please select both color and size before adding to the cart!");
             return;
         }
-    
+        
         const selectedProductVariant = product?.productVariantDtos.find(
-            (variant) => variant.colorDto.id === selectedColorId && variant.sizeDto.id === activeSize
+            (variant) => variant.colorDto.id === selectedColorId && variant.sizeDto.id === selectedSizeId
         );
-    
+
         if (!selectedProductVariant) {
-            alert("Sản phẩm không có biến thể phù hợp!");
+            toast.warning("No product variant found with the selected color and size!");
             return;
         }
-    
-        const cartItem: CartItem = {
-            name: product?.name || "",
-            quantity: quantity,
-            unitPrice: product?.price || 0,
+        
+        const cartItemRequestDto: CartItemRequestDto = {
             productVariantId: selectedProductVariant.id,
-            productVariantDto: selectedProductVariant
-        };
-    
-        dispatch(addToCart(cartItem));
+            quantity: quantity
+        }
+
+        dispatch(addToCart(cartItemRequestDto));
     };
+
+    const wishLists = useSelector((state: RootState) => state.wishList);
+    const isWishList = product ? wishLists.includes(product.id) : false;
 
     return (
         // Shop Details Section Begin
@@ -146,27 +160,44 @@ const ShopDetailsSection = () => {
                                 <div className="product__details__option__size">
                                     <span>Size:</span>
                                     {sizesForSelectedColor.map((size) => (
-                                        <label key={size.sizeId} htmlFor={size.sizeName} className={size.sizeId === activeSize ? "active" : ""}>
-                                        {size.sizeName}
-                                        <input 
-                                            type="radio"
-                                            id={size.sizeName}
-                                            name="size"
-                                            value={size.sizeId}
-                                            checked={size.sizeId === activeSize}
-                                            onChange={() => handleSizeSelection(size.sizeId)}
-                                        />
+                                        <label 
+                                            key={size.sizeId}
+                                            htmlFor={size.sizeName}
+                                            className={size.sizeId === selectedSizeId ? "active" : ""}
+                                        >
+                                            {size.sizeName}
+                                            <input 
+                                                type="radio"
+                                                id={size.sizeName}
+                                                name="size"
+                                                value={size.sizeId}
+                                                checked={size.sizeId === selectedSizeId}
+                                                onChange={() => handleSizeSelection(size.sizeId)}
+                                            />
                                         </label>
                                     ))}
                                 </div>
                             </div>
                             <div className="product__details__cart__option">
                                 <ProductQuantitySelector quantity={quantity} onQuantityChange={setQuantity} />
-                                <button className="primary-btn" onClick={() => handleAddToCart()}>Add to Cart</button>
+                                <button 
+                                    className="primary-btn" 
+                                    onClick={() => handleAddToCart()} 
+                                    disabled={!selectedColorId || !selectedSizeId}
+                                >
+                                    Add to Cart
+                                </button>
                             </div>
                             <div className="product__details__btns__option">
-                                <a href="#"><i className="fa fa-heart"></i> add to wishlist</a>
-                                <a href="#"><i className="fa fa-exchange"></i> Add To Compare</a>
+                                <span>
+                                    <IconButton onClick={() => product?.id && dispatch(toggleWishList(product.id))}>
+                                        {isWishList ? <Favorite sx={{ color: "red" }} /> : <FavoriteBorder />}
+                                    </IconButton>
+                                    add to wishlist
+                                </span>
+                                <span>
+                                    <i className="fa fa-exchange"></i> Add To Compare
+                                </span>
                             </div>
                             <div className="product__details__last__option">
                                 <h5><span>Guaranteed Safe Checkout</span></h5>

@@ -166,7 +166,7 @@ namespace MaleFashion.Server.Data
                 entity.HasMany(os => os.Orders)
                     .WithOne(o => o.OrderStatus)
                     .HasForeignKey(o => o.OrderStatusId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             // Favorite (User - ProductVariant n-n)

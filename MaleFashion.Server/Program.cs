@@ -1,4 +1,4 @@
-using MaleFashion.Server.Data;
+﻿using MaleFashion.Server.Data;
 using MaleFashion.Server.Models.Entities;
 using MaleFashion.Server.Repositories.Implementations;
 using MaleFashion.Server.Repositories.Interfaces;
@@ -74,18 +74,44 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme =
     options.DefaultSignInScheme =
     options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(options =>
+})
+.AddJwtBearer(options =>
 {
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["JWT:Issuer"],
+
         ValidateAudience = true,
         ValidAudience = builder.Configuration["JWT:Audience"],
+
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(
             System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"])
-        )
+        ),
+
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+
+    options.SaveToken = true;
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Add("Token-Expired", "true");
+            }
+            return Task.CompletedTask;
+        },
+        OnChallenge = async context =>
+        {
+            context.HandleResponse();
+            context.Response.StatusCode = 401;
+            await context.Response.WriteAsJsonAsync(new { message = "Unauthorized" });
+        }
     };
 });
 #endregion
@@ -93,13 +119,23 @@ builder.Services.AddAuthentication(options =>
 #region CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
+    options.AddPolicy("AllowFrontend",
         builder =>
         {
-            builder.AllowAnyOrigin()
-                   .AllowAnyMethod()
-                   .AllowAnyHeader();
+            builder.WithOrigins("https://localhost:5173")
+                    .AllowCredentials()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
         });
+});
+#endregion
+
+#region Cookies
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.MinimumSameSitePolicy = SameSiteMode.Strict;
+    options.HttpOnly = Microsoft.AspNetCore.CookiePolicy.HttpOnlyPolicy.Always;
+    options.Secure = CookieSecurePolicy.Always;
 });
 #endregion
 
@@ -112,6 +148,7 @@ builder.Services.AddRouting(options =>
 
 #region Repository and Service Registrations
 // Repositories
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<ISizeRepository, SizeRepository>();
 builder.Services.AddScoped<IColorRepository, ColorRepository>();
@@ -119,6 +156,10 @@ builder.Services.AddScoped<IMainCategoryRepository, MainCategoryRepository>();
 builder.Services.AddScoped<ISubCategoryRepository, SubCategoryRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IProductVariantRepository, ProductVariantRepository>();
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<ICartItemRepository, CartItemRepository>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderStatusRepository, OrderStatusRepository>();
 
 // Service
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -128,6 +169,9 @@ builder.Services.AddScoped<IMainCategoryService, MainCategoryService>();
 builder.Services.AddScoped<ISubCategoryService, SubCategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IProductVariantService, ProductVariantService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICartItemService, CartItemService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 #endregion
@@ -168,7 +212,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors("AllowAllOrigins");
+app.UseCookiePolicy();
+app.UseCors("AllowFrontend"); 
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();

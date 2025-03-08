@@ -1,5 +1,6 @@
 ﻿using MaleFashion.Server.Models.DTOs.Product;
 using MaleFashion.Server.Models.DTOs.ProductVariant;
+using MaleFashion.Server.Models.Entities;
 using MaleFashion.Server.Services.Implementations;
 using MaleFashion.Server.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -16,6 +17,30 @@ namespace MaleFashion.Server.Controllers
         public ProductVariantController(IProductVariantService productVariantService)
         {
             _productVariantService = productVariantService;
+        }
+        
+        [HttpPost("details")]
+        public async Task<IActionResult> GetProductVariantsDetails([FromBody] List<int> productVariantIds)
+        {
+            try
+            {
+                if (productVariantIds == null || !productVariantIds.Any())
+                {
+                    return BadRequest();
+                }
+
+                var productVariants = await _productVariantService.GetProductVariantsByIdsAsync(productVariantIds);
+                if (productVariants == null || !productVariants.Any())
+                {
+                    return NotFound("No product variants found");
+                }
+
+                return Ok(productVariants);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "", error = ex.Message });
+            }
         }
 
         [HttpGet]

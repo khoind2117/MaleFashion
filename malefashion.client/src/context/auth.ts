@@ -1,10 +1,10 @@
 export interface RegisterData {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
-    address: string;
+    email: string;
     phoneNumber:string; 
+    address: string;
+    password: string;
 }
 
 export interface LoginData {
@@ -17,6 +17,12 @@ export interface AuthResponseDto {
     userName: string;
     email: string;
     roles: string[];
-    token: string;
-    refreshToken: string;
+    accessToken: string;
+}
+
+export interface UserData {
+    userId: string;
+    userName: string;
+    email: string;
+    roles: string[];
 }

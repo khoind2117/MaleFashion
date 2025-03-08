@@ -2,7 +2,7 @@
 
 namespace MaleFashion.Server.Repositories.Interfaces
 {
-    public interface ISubCategoryRepository : IRepository<SubCategory>
+    public interface ISubCategoryRepository : IGenericRepository<SubCategory>
     {
     }
 }

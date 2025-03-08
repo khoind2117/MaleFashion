@@ -17,7 +17,7 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        public async Task<IActionResult> GetAll()
         {
             try
             {
@@ -31,7 +31,7 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetByIdAsync(int id)
+        public async Task<IActionResult> Get(int id)
         {
             try
             {
@@ -50,11 +50,11 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddAsync([FromBody] ProductRequestDto productRequestDto)
+        public async Task<IActionResult> Create([FromBody] ProductRequestDto productRequestDto)
         {
             try
             {
-                if (productRequestDto == null)
+                if (!ModelState.IsValid)
                 {
                     return BadRequest();
                 }
@@ -69,11 +69,11 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateAsync(int id, [FromBody] ProductRequestDto productRequestDto)
+        public async Task<IActionResult> Update(int id, [FromBody] ProductRequestDto productRequestDto)
         {
             try
             {
-                if (productRequestDto == null)
+                if (!ModelState.IsValid)
                 {
                     return BadRequest();
                 }
@@ -94,7 +94,7 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpDelete("soft/{id}")]
-        public async Task<IActionResult> SoftDeleteAsync(int id)
+        public async Task<IActionResult> SoftDelete(int id)
         {
             try
             {
@@ -105,7 +105,7 @@ namespace MaleFashion.Server.Controllers
                 }
 
                 await _productService.SoftDeleteAsync(id);
-                return Ok("Soft Deleted successfully.");
+                return NoContent();
             }
             catch (Exception ex)
             {
@@ -114,7 +114,7 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpDelete("hard/{id}")]
-        public async Task<IActionResult> HardDeleteAsync(int id)
+        public async Task<IActionResult> HardDelete(int id)
         {
             try
             {
@@ -125,7 +125,7 @@ namespace MaleFashion.Server.Controllers
                 }
 
                 await _productService.HardDeleteAsync(id);
-                return Ok("Hard Deleted successfully.");
+                return NoContent();
             }
             catch (Exception ex)
             {
@@ -134,7 +134,7 @@ namespace MaleFashion.Server.Controllers
         }
 
         [HttpGet("paged")]
-        public async Task<IActionResult> GetPagedAsync([FromQuery] ProductFilterDto productFilterDto)
+        public async Task<IActionResult> GetPaged([FromQuery] ProductFilterDto productFilterDto)
         {
             try
             {

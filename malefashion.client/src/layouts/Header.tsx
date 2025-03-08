@@ -1,22 +1,23 @@
 import { Link, useNavigate } from "react-router-dom"
 import HeaderMenu from "../components/ui/HeaderMenu"
 import { useSelector } from "react-redux";
-import { CartItem } from "../models/dtos/CartItem/CartItem";
 import { RootState } from "../store/store";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 const Header = () => {
-    const { user, logout } = useContext(AuthContext) ?? {};
+    const authContext = useContext(AuthContext);
+    const user = authContext?.user;
+    const logout = authContext?.logout;
     const navigate = useNavigate();
+
     
-    const cartItems = useSelector((state: RootState) => state.cart.items);
-    
-    const cartTotal = cartItems.reduce((sum: number, item: CartItem) => sum + item.quantity * item.unitPrice, 0);
+    // const cartItems = useSelector((state: RootState) => state.cart.items);
+    // const totalQuantity = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
         // Header Section Begin
-        <header className="header">
+        <header className="hea2der">
             <div className="header__top">
                 <div className="container">
                     <div className="row">
@@ -30,11 +31,11 @@ const Header = () => {
                                 <div className="header__top__links">
                                     {user ? (
                                         <>
-                                            <span>Welcome, {user.userName}!</span>
-                                            <button onClick={logout} className="logout-btn">Logout</button>
+                                            <span className="text-white mr-3">Welcome, {user.userName}!</span>
+                                            <a href="#" onClick={(e) => { e.preventDefault(); logout?.(); }}>Logout</a>
                                         </>
                                     ) : (
-                                        <a href="#" onClick={() => navigate("/login")}>Login</a>
+                                        <a href="#" onClick={(e) => { e.preventDefault(); navigate("/login"); }}>Login</a>
                                     )}
                                     <a href="#">FAQs</a>
                                 </div>
@@ -70,7 +71,7 @@ const Header = () => {
                             <Link to="/cart">
                                 <img src="/src/assets/img/client/icon/cart.png" alt=""/>
                             </Link>
-                            <div className="price">${cartTotal?.toFixed(2)}</div>
+                            {/* <div className="price">{totalQuantity} item(s)</div> */}
                         </div>
                     </div>
                 </div>
